@@ -1,0 +1,18 @@
+name: prod-build
+on:
+  push:
+    tags:
+      - '*'  # Trigger workflow on any tag
+
+jobs:
+  vs-corrections-api:
+    name: prod-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Building docker image
+        run: |
+          chmod +x ./ops/docker/build.sh
+          GCP_PROJECT=${GOOGLE_PROJECT_ID_PROD} ./ops/docker/build.sh images

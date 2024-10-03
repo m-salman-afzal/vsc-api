@@ -1,0 +1,182 @@
+version: 2.1
+orbs:
+  gcp-gcr: circleci/gcp-gcr@0.16.3
+  slack: circleci/slack@4.12.5
+commands:
+  notify-slack:
+    description: "Send Slack notification"
+    parameters:
+      emoji:
+        type: string
+        default: ""
+      event_type:
+        type: string
+        default: "pass"
+      success_failed:
+        type: string
+        default: ""
+    steps:
+      - slack/notify:
+          event: << parameters.event_type >>
+          channel: circleci-builds
+          custom: |
+            {
+              "text": "CircleCI Job",              
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Build << parameters.success_failed >> << parameters.emoji >>",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Project*: $CIRCLE_PROJECT_REPONAME\n*Branch*: $CIRCLE_BRANCH\n*Author*: $COMMIT_AUTHOR\n*Commit*: $COMMIT_HASH"
+                    }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "View Job"
+                      },
+                      "url": "${CIRCLE_BUILD_URL}"
+                    }
+                  ]
+                }
+              ]
+            }
+jobs:
+  sandbox-deploy:
+    executor: gcp-gcr/default
+    steps:
+      - checkout
+      - gcp-gcr/gcr-auth:
+          gcloud-service-key: GCLOUD_SERVICE_KEY_STAGING
+          google-project-id: GOOGLE_PROJECT_ID_STAGING
+          google-compute-zone: GOOGLE_COMPUTE_ZONE_STAGING
+      - run:
+          name: store author name, hash and message of commit in BASH_ENV
+          command:
+            echo "export COMMIT_AUTHOR=\"$(git log --format="%an" -n 1 $CIRCLE_SHA1)\"" >> $BASH_ENV && echo
+            "export COMMIT_HASH=\"$(git log --pretty=format:"%h/%B" -n 1 $CIRCLE_SHA1)\"" >> $BASH_ENV
+      - run:
+          name: Import application Credentials files
+          command: |
+              gcloud secrets versions access latest --secret=DEV_FCH_SAML > saml.pem
+              gcloud secrets versions access latest --secret=FCH_SERVICE_ACCOUNT_KEY > FCH_SERVICE_ACCOUNT_KEY.json
+              gcloud secrets versions access latest --secret=DEV_GCP_LOGGING_KEY > GCP_LOGGING_KEY.json
+              gcloud secrets versions access latest --secret=CORRECTIONS-API > .env
+              mv saml.pem src/Infrastructure/Services/ThirdPartyClient/Credentials/
+              mv FCH_SERVICE_ACCOUNT_KEY.json src/Infrastructure/Services/ThirdPartyClient/Credentials/
+              mv GCP_LOGGING_KEY.json src/Infrastructure/Services/ThirdPartyClient/Credentials/
+      - run:
+          name: Configure gcloud for Artifact Registry
+          command: |
+            gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - run:
+          name: Build image and Push 
+          command: chmod +x ./ops/docker/dev_build.sh && GCP_PROJECT=${GOOGLE_PROJECT_ID_STAGING} ./ops/docker/dev_build.sh images
+      - notify-slack:
+          event_type: "pass"
+          success_failed: "Successful"
+          emoji: ":white_check_mark:"
+      - notify-slack:
+          event_type: "fail"
+          success_failed: "failed"
+          emoji: ":x:"
+      - run:
+          name: fchc-helm-charts pipeline
+          command: |
+            curl --request POST 'https://circleci.com/api/v2/project/github/Viral-Solutions-LLC/fchc-helm-charts/pipeline'  --header 'Content-Type: application/json'  --header "Circle-Token: $API_TOKEN"
+  prod-deploy:
+    executor: gcp-gcr/default
+    steps:
+      - checkout
+      - gcp-gcr/gcr-auth:
+          gcloud-service-key: GCLOUD_SERVICE_KEY_PROD
+          google-project-id: GOOGLE_PROJECT_ID_PROD
+          google-compute-zone: GOOGLE_COMPUTE_ZONE_PROD
+      - run:
+          name: store author name, hash and message of commit in BASH_ENV
+          command:
+            echo "export COMMIT_AUTHOR=\"$(git log --format="%an" -n 1 $CIRCLE_SHA1)\"" >> $BASH_ENV && echo
+            "export COMMIT_HASH=\"$(git log --pretty=format:"%h/%B" -n 1 $CIRCLE_SHA1)\"" >> $BASH_ENV
+      - run:
+          name: Import application Credentials files
+          command: |
+              gcloud secrets versions access latest --secret=PROD_FCH_SAML > saml.pem
+              gcloud secrets versions access latest --secret=PROD_FCH_SERVICE_ACCOUNT_KEY > FCH_SERVICE_ACCOUNT_KEY.json
+              gcloud secrets versions access latest --secret=PROD_GCP_LOGGING_KEY > GCP_LOGGING_KEY.json
+              gcloud secrets versions access latest --secret=CORRECTIONS-API > .env
+              mv saml.pem src/Infrastructure/Services/ThirdPartyClient/Credentials/
+              mv FCH_SERVICE_ACCOUNT_KEY.json src/Infrastructure/Services/ThirdPartyClient/Credentials/
+              mv GCP_LOGGING_KEY.json src/Infrastructure/Services/ThirdPartyClient/Credentials/
+      - run:
+          name: Build image
+          command: chmod +x ./ops/docker/build.sh && GCP_PROJECT=${GOOGLE_PROJECT_ID_PROD} ./ops/docker/build.sh images
+      - gcp-gcr/push-image:
+          digest-path: /tmp/digest.txt
+          image: vs-corrections-api
+          registry-url: gcr.io
+          google-project-id: GOOGLE_PROJECT_ID_PROD
+          tag: $(cat ~/tag-${GOOGLE_PROJECT_ID_PROD}.txt)
+      - run: echo "Successfully built and pushed container to GCR."
+      - notify-slack:
+          event_type: "pass"
+          success_failed: "Successful"
+          emoji: ":white_check_mark:"
+      - notify-slack:
+          event_type: "fail"
+          success_failed: "failed"
+          emoji: ":x:"
+      - run:
+          name: fchc-helm-charts pipeline (Production)
+          command: |
+            curl --request POST 'https://circleci.com/api/v2/project/github/Viral-Solutions-LLC/fchc-helm-charts/pipeline'  --header 'Content-Type: application/json'  --header "Circle-Token: $API_TOKEN" --data '{"branch":"Production"}'         
+workflows:
+  version: 2
+  sandbox:
+    jobs:
+      - approval-sandbox-deploy:
+          type: approval
+          filters:
+            branches:
+                only:    
+                    - /release\/.*/
+      - sandbox-deploy:
+          filters:
+            branches:
+                only:    
+                    - /release\/.*/
+          requires:
+            - approval-sandbox-deploy
+  prod:
+        jobs:
+            - approval-prod-deploy:
+                  type: approval
+                  filters:
+                    tags:
+                      only: 
+                        - /.*/
+                    branches:
+                      ignore: /.*/
+            - prod-deploy:
+                  filters:
+                    tags:
+                      only: 
+                        - /.*/
+                    branches:
+                      ignore: /.*/
+                  requires:
+                      - approval-prod-deploy
+

@@ -1,0 +1,33 @@
+# Editor
+/.idea
+/.vscode
+
+# Project
+.env*
+/build
+/node_modules
+/storage
+/coverage
+/.husky
+/.github
+/.circleci
+README.md
+.npmrc
+
+# Credentials
+*.crt
+*.key
+*.pem
+
+# Configs
+.prettierignore
+.eslintignore
+.gitattributes
+.gitignore
+.dockerignore
+
+# Misc
+*.png
+
+# Docker
+/ops

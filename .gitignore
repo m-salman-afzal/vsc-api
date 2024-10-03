@@ -1,0 +1,22 @@
+# Editor
+/.idea
+/.vscode
+**/.DS_Store
+
+# Project
+.env
+/build
+/node_modules
+/storage
+/coverage
+/certificates
+
+# Lock files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+*.token.json
+*.crt
+*.key
+vulnerability_scan.sh

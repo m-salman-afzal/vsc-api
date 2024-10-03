@@ -1,0 +1,69 @@
+version: '3.3'
+services:
+  vs-corrections-api:
+    # build:
+    #   context: ../
+    #   dockerfile: docker/api-server/prod/Dockerfile
+    image: 561eb4b26d89
+    hostname: vs-corrections-api
+    network_mode: host
+    ports:
+     - 8088:8088
+    environment:
+      - APP_VERSION=${APP_VERSION}
+      - APP_NAME=${APP_NAME}
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${PORT}
+      - SECRET=${SECRET}
+      - APP_URL=${APP_URL}
+      - PORTAL_APP_VERSION=${PORTAL_APP_VERSION}
+      - PORTAL_APP_URL=
+
+       # Database Connections
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_SYNCHRONIZE=${DB_SYNCHRONIZE}
+      - DB_LOGGING=${DB_LOGGING}
+
+       # Redis Config
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=
+      - REDIS_DB_NUMBER=${REDIS_DB_NUMBER}
+
+      # Auth Config
+      - PASSWORD_EXPIRY_DAYS=${PASSWORD_EXPIRY_DAYS}
+      - MAX_LOGIN_TRIES=${MAX_LOGIN_TRIES}
+      - SESSION_MAXAGE=${SESSION_MAXAGE}
+
+      # SAML Config
+      - SAML_CERT=${SAML_CERT}
+      - SAML_PROTOCOL=${SAML_PROTOCOL}
+      - SAML_PATH=${SAML_PATH}
+      - SAML_ENTRYPOINT=${SAML_ENTRYPOINT}
+      - SAML_ISSUER=${SAML_ISSUER}
+
+      # Sendgrid Cred
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - SENDGRID_FROM_EMAIL=${SENDGRID_API_KEY}
+      - SENDGRID_FROM_NAME=${SENDGRID_API_KEY}
+
+      # Google API
+      - GCP_KEY=${GCP_KEY}
+      - GOOGLE_STORAGE_BUCKET=${GOOGLE_STORAGE_BUCKET}
+
+      # FCH
+      - ALLOWED_EMAIL_DOMAINS=${ALLOWED_EMAIL_DOMAINS}
+
+      # Sapphire
+      - SAPPHIRE_REMOVE_FILE_DAYS=${SAPPHIRE_REMOVE_FILE_DAYS}
+
+      # Sftp Client
+      - SFTP_HOST=${SFTP_HOST}
+      - SFTP_PORT=${SFTP_PORT}
+      - SFTP_USERNAME=${SFTP_USERNAME}
+      - SFTP_PASSWORD=${SFTP_PASSWORD}
+      - SFTP_PATH=${SFTP_PATH}

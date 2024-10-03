@@ -1,0 +1,41 @@
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/AdminProcessor.js bulkUpsertAdmins >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/ServiceDisruptionProcessor.js bulkAddServiceDisruptions --PROCESS_LABEL=SERVICE_DISRUPTION >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/FormularyProcessor.js bulkAddFormulary >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/FormularyLevelsProcessor.js bulkAddFormularyLevels >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/InventoryProcessor.js bulkAddNonControlledInventory >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/InventoryProcessor.js bulkAddControlledInventory >> /var/log/cron.log 2>&1
+
+0 9 * * * cd /corrections-api && /usr/local/bin/node ./build/bin/InventoryProcessor.js deactivateExpiredInventory >> /var/log/cron.log 2>&1
+
+30 9 * * * cd /corrections-api && /usr/local/bin/node ./build/bin/InventoryHistoryProcessor.js uploadInventoryHistory >> /var/log/cron.log 2>&1
+
+#0 * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/FileProcessor.js removeSapphireProcessedFiles >> /var/log/cron.log 2>&1
+
+15 9 * * * cd /corrections-api && /usr/local/bin/node ./build/bin/MedicationListProcessor.js addMedicationList >> /var/log/cron.log 2>&1
+
+25 9 * * * cd /corrections-api && /usr/local/bin/node ./build/bin/FacilityUnitProcessor.js bulkAddUnits >> /var/log/cron.log 2>&1
+
+0 9 * * * cd /corrections-api && /usr/local/bin/node ./build/bin/PatientProcessor.js bulkUpsertPatients >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/HistoryPhysicalProcessor.js sapphireHistoryPhysical --PROCESS_LABEL=HISTORY_AND_PHYSICAL >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/DivisionProcessor.js bulkAddDivisions --DIVISION_LABEL=BULK_ADD_JAIL_DIVISION >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/DivisionProcessor.js bulkAddDivisions --DIVISION_LABEL=BULK_ADD_FIELD_DIVISION >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/DivisionProcessor.js bulkAddDivisions --DIVISION_LABEL=BULK_ADD_SUPPORT_DIVISION >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/DivisionProcessor.js bulkAddDivisions --DIVISION_LABEL=BULK_ADD_COURT_DIVISION >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/DivisionProcessor.js bulkAddAdministrativeDivision >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/DivisionProcessor.js bulkAddSwornPersonnel >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/ReferenceGuideProcessor.js bulkAddReferenceGuideDrugs >> /var/log/cron.log 2>&1
+
+* * * * * cd /corrections-api && /usr/local/bin/node ./build/bin/CartRequestDrugProcessor.js cartInitialAllocation >> /var/log/cron.log 2>&1

@@ -1,0 +1,3 @@
+export const PATIENT_STATUS = ["ACTIVE", "RELEASED"] as const;
+
+export const PATIENT_STATUS_TYPE = {ACTIVE: "ACTIVE", RELEASED: "RELEASED"};

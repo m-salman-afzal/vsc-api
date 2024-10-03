@@ -1,0 +1,93 @@
+name: pull-request-tag
+
+on:
+  pull_request:
+    types: [opened]
+  pull_request_review:
+    types: [submitted, dismissed]
+  pull_request_review_comment: 
+    types: [created, edited]
+
+
+jobs:
+  pr-created:
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: add review required labelto pull request when it is made first time
+      uses: actions-ecosystem/action-add-labels@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        labels: 'review required'
+
+  pr-approved:
+    if: ${{ github.event_name == 'pull_request_review' && github.event.review.state == 'approved' }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: add approved label to pull request when it is approved
+      uses: actions-ecosystem/action-add-labels@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        labels: 'approved'
+
+    - name: remove review required label from pull request when it is approved
+      uses: actions-ecosystem/action-remove-labels@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        labels: 'review required'
+
+    - name: remove changes requested from pull request when it is approved
+      uses: actions-ecosystem/action-remove-labels@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        labels: 'changes requested'
+
+  pr-dismissed:
+    if: ${{ github.event_name == 'pull_request_review' && github.event.review.state == 'dismissed' }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: remove approved label from pull request when it is dismissed
+      uses: actions-ecosystem/action-remove-labels@v1
+      with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: 'approved'
+
+        
+    - name: add review required label to pull request when it is dismissed
+      uses: actions-ecosystem/action-add-labels@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        labels: 'review required'
+
+    - name: remove changes requested from pull request when it is approved
+      uses: actions-ecosystem/action-remove-labels@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        labels: 'changes requested'
+  
+  pr-commented:
+    if: ${{ github.event_name == 'pull_request_review_comment' }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: add commented label to pull request when it is commented
+      uses: actions-ecosystem/action-add-labels@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        labels: 'changes requested'
+
+    - name: remove approved label from pull request when it is commented
+      uses: actions-ecosystem/action-remove-labels@v1
+      with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: 'approved'
+
+    - name: remove review required label from pull request when it is commented
+      uses: actions-ecosystem/action-remove-labels@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        labels: 'review required'
+  

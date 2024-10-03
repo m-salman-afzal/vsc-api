@@ -1,0 +1,18 @@
+name: sandbox-build
+on:
+  push:
+    branches:
+      - 'release/**'
+
+jobs:
+  vs-corrections-api:
+    name: sandbox-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Building docker image
+        run: |
+          chmod +x ./ops/docker/dev-gh-build.sh
+          GCP_PROJECT=${GOOGLE_PROJECT_ID_STAGING} ./ops/docker/dev-gh-build.sh images

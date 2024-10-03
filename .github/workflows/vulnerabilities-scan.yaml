@@ -1,0 +1,40 @@
+name: vulnerabilities-scan
+on: 
+  push:
+    branches: 
+      - 'release/**'
+
+jobs:
+  vs-corrections-api:
+    name: package-audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create audit_report,json file 
+        run: npm audit --json > audit_report.json
+        continue-on-error: true
+
+      - name: Install jq
+        run: sudo apt-get install jq -y
+
+      - name: Scanning Code for vulnerabilities
+        run: |
+          high_vulnerabilities_count=$(jq -r '.metadata.vulnerabilities.high' audit_report.json)
+          critical_vulnerabilities_count=$(jq -r '.metadata.vulnerabilities.critical' audit_report.json)
+          echo "High severity vulnerabilities: $high_vulnerabilities_count"
+          echo "Critical severity vulnerabilities: $critical_vulnerabilities_count"
+          if [ "$high_vulnerabilities_count" -gt 0 ] || [ "$critical_vulnerabilities_count" -gt 0 ]; then
+              echo "High or critical severity vulnerabilities found, failing build"
+              exit 1
+          fi
